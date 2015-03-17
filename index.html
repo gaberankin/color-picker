@@ -29,5 +29,12 @@
 		});
 
 		</script>
+
+		<h3>known issues</h3>
+		<ul>
+			<li>Safari &amp; Firefox are super slow (safari more so) because I'm not drawing the canvas element in a manner they consider efficient.  I did most development in chrome, and even then I got really lazy in order to fix the empty pixels as the radius increased.<br />
+				<em>Instead of reducing the increment size as the radius increases, I should be drawing lines to fill the space.</em></li>
+			<li>Firefox isn't picking up mouse events.</li>
+		</ul>
 	</body>
 </html>
