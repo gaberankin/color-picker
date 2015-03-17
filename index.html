@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<script type="text/javascript" src="col.js"></script>
+	</head>
+	<body>
+		<div id="col-test"></div>
+		Saturation: <select id="saturation">
+			<option>1</option>
+			<option>0.9</option>
+			<option>0.8</option>
+			<option>0.7</option>
+			<option>0.6</option>
+			<option>0.5</option>
+			<option>0.4</option>
+			<option>0.3</option>
+			<option>0.2</option>
+			<option>0.1</option>
+			<option>0</option>
+		</select>
+		<div id="debug"></div>
+		<script type="text/javascript">
+		var c = new Col(document.getElementById('col-test'));
+		c.debug(document.getElementById('debug'));
+		document.getElementById('saturation').addEventListener('change', function(e){
+			c.draw(e.target.value);
+		});
+
+		</script>
+	</body>
+</html>
