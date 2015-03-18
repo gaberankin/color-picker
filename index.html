@@ -33,7 +33,10 @@
 		<h3>known issues</h3>
 		<ul>
 			<li>Safari &amp; Firefox are super slow (safari more so) because I'm not drawing the canvas element in a manner they consider efficient.  I did most development in chrome, and even then I got really lazy in order to fix the empty pixels as the radius increased.<br />
-				<em>Instead of reducing the increment size as the radius increases, I should be drawing lines to fill the space.</em></li>
+				<ul>
+					<li>Instead of reducing the increment size as the radius increases, I should be drawing lines to fill the space.</li>
+					<li>It seems as though code from <a href="http://stackoverflow.com/questions/10878209/midpoint-circle-algorithm-for-filled-circles">here</a> is most promising.  a broken version of this is demonstrated on <a href="lab/midpoint-stackoverflow.html">this test page</a> (note that the color is offset - this is because i don't make the origin correction, but the point still stands)</li>
+				</ul></li>
 			<li>Firefox isn't picking up mouse events.</li>
 		</ul>
 	</body>
