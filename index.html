@@ -36,6 +36,7 @@
 				<ul>
 					<li>Instead of reducing the increment size as the radius increases, I should be drawing lines to fill the space.</li>
 					<li>It seems as though code from <a href="http://stackoverflow.com/questions/10878209/midpoint-circle-algorithm-for-filled-circles">here</a> is most promising, in that the performance is most consistent across the 3 browsers (chrome, safari, firefox), although safari and firefox appear more performant here.  a version of this is demonstrated on <a href="lab/midpoint-stackoverflow.html">this test page</a></li>
+					<li>Even better - rather than doing a putImageData() call for each pixel, if i pull the full ImageData array and manipulate that, it seems to be faster on chrome and firefox.  safari still lags behind though.  See <a href="lab/midpoint-stackoverflow-fullbuffer.html">this test page</a> for a demonstration.</li>
 				</ul></li>
 			<li>Firefox isn't picking up mouse events.</li>
 			<li>Haven't tested on IE yet.  I am scared to.</li>
