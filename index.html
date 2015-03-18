@@ -30,14 +30,10 @@
 
 		</script>
 
-		<h3>known issues</h3>
+		<h3>Notes</h3>
 		<ul>
-			<li>Safari &amp; Firefox are super slow (safari more so) because I'm not drawing the canvas element in a manner they consider efficient.  I did most development in chrome, and even then I got really lazy in order to fix the empty pixels as the radius increased.<br />
-				<ul>
-					<li>Instead of reducing the increment size as the radius increases, I should be drawing lines to fill the space.</li>
-					<li>It seems as though code from <a href="http://stackoverflow.com/questions/10878209/midpoint-circle-algorithm-for-filled-circles">here</a> is most promising, in that the performance is most consistent across the 3 browsers (chrome, safari, firefox), although safari and firefox appear more performant here.  a version of this is demonstrated on <a href="lab/midpoint-stackoverflow.html">this test page</a></li>
-					<li>Even better - rather than doing a putImageData() call for each pixel, if i pull the full ImageData array and manipulate that, it seems to be faster on chrome and firefox.  safari still lags behind though.  See <a href="lab/midpoint-stackoverflow-fullbuffer.html">this test page</a> for a demonstration.</li>
-				</ul></li>
+			<li>Generation of the picker isn't quick.  this is because we're drawing the circle pixel-by-pixel.  However, I've gotten it as fast as possible by manually manipulating the values in the image data and then plopping the whole thing into the canvas context once rather than once per pixel (don't do that - it makes browsers sad).</li>
+			<li>Thanks to <a href="http://stackoverflow.com/questions/10878209/midpoint-circle-algorithm-for-filled-circles">this stackoverflow item</a> for the inspiration on how to fix my pixel drawing redundancy issues by introducing me to the midpoint circle algorithm</li>
 			<li>Firefox isn't picking up mouse events.</li>
 			<li>Haven't tested on IE yet.  I am scared to.</li>
 		</ul>

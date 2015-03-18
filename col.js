@@ -1,4 +1,5 @@
 var Col = (function(){
+
 	var El = function(tagName, attributes) {
 		el = document.createElement(tagName);
 		if(attributes && typeof attributes == 'object') {
@@ -33,6 +34,30 @@ var Col = (function(){
 		}
 	}
 
+	var drawHorizontalLine = function(instance, data, startX, endX, y, centerX, centerY) {
+		if(startX > endX) {
+			var tmp = startX;
+			startX = endX;
+			endX = tmp;
+		}
+		var dist, angle, h, l, correctedX, correctedY = y - centerY;
+		for(var x = startX; x <= endX; x++) {
+			correctedX = x - centerX;
+			dist = Math.sqrt(correctedX*correctedX + correctedY*correctedY);
+			angle = Math.atan2(correctedY, correctedX) * 180 / Math.PI;
+			h = angle / 360;
+			l = 1 - (dist / 128);
+			rgb = Col.hslToRgb(h,instance.saturation,l);
+			i = (y * instance.canvas.width + x) * 4;
+			data[i + 0] = rgb[0];
+			data[i + 1] = rgb[1];
+			data[i + 2] = rgb[2];
+			data[i + 3] = 255;
+		}
+		instance.drawProgress();
+		instance.numLinesDrawn++;
+	}
+
 	var Col = function(container){
 		var w = h = 256;
 		var ox = (w / 2), oy = (h / 2);	//origin for point calculations
@@ -43,6 +68,9 @@ var Col = (function(){
 		this.parentContainer.appendChild(this.container);
 		this.container.appendChild(this.canvas);
 		this.saturation = 1;
+		this.drawing = false;
+		this.numLinesDrawn = 0;
+		this.numLinesToDraw = 0;
 
 		this.context = this.canvas.getContext('2d');
 
@@ -53,7 +81,7 @@ var Col = (function(){
 		var pipDrawn = false;
 
 		me = this;
-		console.log(w, h);
+
 		var drawPip = function(x, y){
 			me.draw();
 			pipDrawn = true;
@@ -83,6 +111,8 @@ var Col = (function(){
 		}
 
 		Attach(this.canvas, 'mousemove', function(e) {
+			if(me.drawing)
+				return;
 			var x = e.offsetX - ox;
 			var y = e.offsetY - oy;
 			dist = Math.sqrt(x*x + y*y);
@@ -112,52 +142,122 @@ var Col = (function(){
 
 		me.draw();
 	}
+	/**
+	 *	Draws the color picker to the canvas.
+	 *	Note that it uses the wheelData array to see if the picker for the selected saturation has already
+	 *	been created.  if it has, then we use that, resulting in a quicker draw time.
+	 *	Otherwise, we use a variant of the midpoint circle algorithm (thanks to http://stackoverflow.com/questions/10878209/midpoint-circle-algorithm-for-filled-circles)
+	 */
 	Col.prototype.draw = function(saturation){
+		if(this.drawing) {
+			try {
+				console.error("Please wait while process completes before attempting to call draw method.")
+			} catch(e){
+
+			}
+			return;
+		}
+		this.numLinesDrawn = 0;
+
 		this.saturation = saturation === void 0 ? this.saturation : parseFloat(saturation);
 
 		if(this.wheelData['d' + this.saturation] === void 0) {
-			var imageData = this.context.createImageData(1, 1);
-			var imageDataData = imageData.data;
-			var x, y, color, h, l, rads, inc;
+			var imageData, imageDataData, centerX, centerY, x, y, radius, radiusError, startX, endX;
 
 			this.context.beginPath();
 			this.context.rect(0, 0, this.canvas.width, this.canvas.height);
 			this.context.fillStyle = '#000';
 			this.context.fill();
 
-			for(var r = 0; r <= 128; r += 0.891) {
-				l = 1- (r / 128);
-				inc = l;
-				if(inc <= 0.001)
-					inc = 1;
-				for(var a = 0; a <= 360; a+=inc) {
-					rads = a * (Math.PI / 180);
-					h = a / 360;
-					x = (r * Math.cos(rads)) + 128;
-					y = (r * Math.sin(rads)) + 128;
-					color = Col.hslToRgb(h, this.saturation, l);
+			imageData = this.context.getImageData(0, 0, this.canvas.width, this.canvas.height);
+			imageDataData = imageData.data;
 
-					imageDataData[0] = color[0];
-					imageDataData[1] = color[1];
-					imageDataData[2] = color[2];
-					imageDataData[3] = 255;
 
-					this.context.putImageData(imageData, x, y);
+			centerX = Math.round(this.canvas.width / 2),
+			centerY = Math.round(this.canvas.height / 2),
+			radius = 128;
+			this.numLinesToDraw = radius * 2 + 1;
+			
+			x = radius;
+			y = 0;
+			radiusError = 1 - x;
+			var me = this;
 
+			var drawCircle = function() {
+				if (x >= y) {  // iterate to the circle diagonal
+
+					// use symmetry to draw the two horizontal lines at this Y with a special case to draw
+					// only one line at the centerY where y == 0
+					startX = -x + centerX;
+					endX = x + centerX;         
+					drawHorizontalLine(me, imageDataData, startX, endX, y + centerY, centerX, centerY );
+					if (y != 0) {
+						drawHorizontalLine(me, imageDataData, startX, endX, -y + centerY , centerX, centerY);
+					}
+
+					// move Y one line
+					y++;
+
+					// calculate or maintain new x
+					if (radiusError<0) {
+						radiusError += 2 * y + 1;
+					} else {
+						// we're about to move x over one, this means we completed a column of X values, use
+						// symmetry to draw those complete columns as horizontal lines at the top and bottom of the circle
+						// beyond the diagonal of the main loop
+						if (x >= y)
+						{
+							startX = -y + 1 + centerX;
+							endX = y - 1 + centerX;
+							drawHorizontalLine(me, imageDataData, startX, endX,  x + centerY, centerX, centerY );
+							drawHorizontalLine(me, imageDataData, startX, endX, -x + centerY, centerX, centerY );
+						}
+						x--;
+						radiusError += 2 * (y - x + 1);
+					}
+					setTimeout(drawCircle, 0);
+					return;
 				}
+				me.context.putImageData(imageData, 0, 0);
+				me.context.beginPath();
+				me.context.arc(128, 128, 129, 0, 2 * Math.PI, false);
+				me.context.lineWidth = 1;
+				me.context.strokeStyle = 'rgba(255,255,255,0.3)';
+				me.context.stroke();
+				me.wheelData['d' + me.saturation] = me.context.getImageData(0,0, me.canvas.width, me.canvas.height);
+
+				me.drawing = false;
 			}
-			this.context.beginPath();
-			this.context.arc(128, 128, 129, 0, 2 * Math.PI, false);
-			this.context.lineWidth = 1;
-			this.context.strokeStyle = 'rgba(255,255,255,0.3)';
-			this.context.stroke();
-			this.wheelData['d' + this.saturation] = this.context.getImageData(0,0, this.canvas.width, this.canvas.height);
+			this.drawing = true;
+			setTimeout(drawCircle, 0);
+
 		}
 		else
 		{
 			this.context.putImageData(this.wheelData['d' + this.saturation], 0, 0);
 		}
 	}
+
+	Col.prototype.drawProgress = function() {
+		var progressBarWidth = 100,
+			progressBarHeight = 10;
+		var rx = Math.round(this.canvas.width / 2) - Math.round(progressBarWidth / 2),
+			ry = Math.round(this.canvas.height / 2) - Math.round(progressBarHeight / 2);
+		var progressBarProgressWidth = Math.round(this.numLinesDrawn / this.numLinesToDraw * progressBarWidth);
+
+		this.context.beginPath();
+		this.context.setLineDash([0]);
+		this.context.lineWidth="1";
+		this.context.strokeStyle="#fff";
+		this.context.rect(rx,ry,progressBarWidth,progressBarHeight);
+		this.context.stroke();
+		this.context.beginPath();
+		this.context.fillStyle="#fff";
+		this.context.rect(rx,ry,progressBarProgressWidth,progressBarHeight);
+		this.context.fill();
+	}
+
+
 	Col.prototype.debug = function(element) {
 		this.debugElement = element;
 		this.log = function(str) {
