@@ -2,7 +2,7 @@
  *	Porting code described from http://stackoverflow.com/questions/10878209/midpoint-circle-algorithm-for-filled-circles
  *	to javascript.  this is to be used to test speeds of different drawing algorithms.
  */
-var canvas = null, context = null, imgData = null, data = null, centerX, centerY, radius, canvasWidth;
+var canvas = null, context = null, imgData = null, data = null, centerX, centerY, radius, canvasWidth, numLinesToDraw, numLinesDrawn = 0;
 function init() {
 	canvas = document.getElementById('canvas');
 	context = canvas.getContext('2d');
@@ -23,6 +23,7 @@ function draw() {
 	centerX = Math.round(canvas.width / 2),
 	centerY = Math.round(canvas.height / 2),
 	radius = 128;
+	numLinesToDraw = radius * 2 + 1;
 	
 	var x = radius,
 		y = 0,
@@ -98,4 +99,6 @@ function drawHorizontalLine(startX, endX, y) {
 		data[i + 2] = rgb[2];
 		data[i + 3] = 255;
 	}
+	numLinesDrawn++;
+	console.log((numLinesDrawn / numLinesToDraw) * 100);
 }
