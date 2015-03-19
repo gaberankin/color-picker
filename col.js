@@ -205,7 +205,6 @@ var Col = (function(){
 				};
 
 				me.draw();
-				console.log(rgb);
 			}
 		});
 		Attach(this.saturationDropdown, 'change', function(e){
@@ -352,6 +351,31 @@ var Col = (function(){
 		}
 	}
 
+	Col.prototype.rgb = function(){
+		if(arguments.length == 0) {
+			return this.selection.rgb
+		}
+		var r = arguments[0] * 1, g, b;
+		if(arguments[1] === void 0)
+			g = r;
+		else
+			g = arguments[1] * 1;
+		if(arguments[2] === void 0)
+			b = g;
+		else
+			b = arguments[2] * 1;
+
+		hsl = Col.rgbToHsl(r, g, b);
+		this.selection.rgb = [r, g, b];
+		this.selection.hsl = hsl;
+		this.saturation = hsl[1];
+		var xy = Col.hueAndLuminanceToXY(hsl[0], hsl[2]);
+		this.selection.x = xy[0] + 128;
+		this.selection.y = xy[1] + 128;
+		this.selection.ox = xy[0];
+		this.selection.oy = xy[1];
+		this.draw();
+	}
 
 	Col.prototype.show = function(positionX, positionY){
 
@@ -371,7 +395,7 @@ var Col = (function(){
 
 	/**
 	 * http://stackoverflow.com/questions/2353211/hsl-to-rgb-color-conversion
-	 *	originally found inside hlsToRgb().  took it out because why declare it every time the function is called?
+	 *	originally found inside hlsToRgb().  took it out because why declare it every time the function is called (it could be called a lot)?
 	 */
 	Col.hue2rgb = function(p, q, t){
 		if(t < 0) t += 1;
@@ -441,6 +465,14 @@ var Col = (function(){
 		}
 
 		return [h, s, l];
+	}
+
+	Col.hueAndLuminanceToXY = function(h,l) {
+		r = -128 * (l - 1);
+		rads = (h * 360) * (Math.PI / 180);
+		x = (r * Math.cos(rads));
+		y = (r * Math.sin(rads));
+		return [x, y];
 	}
 
 	return Col;
