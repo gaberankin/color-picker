@@ -288,6 +288,7 @@ var Col = (function(){
 		if(this.wheelData['d' + this.saturation] === void 0) {
 			var imageData, imageDataData, centerX, centerY, x, y, radius, radiusError, startX, endX;
 
+			this.saturationSelector.disabled = true;
 			this.drawBufferContext.beginPath();
 			this.drawBufferContext.rect(0, 0, this.canvas.width, this.canvas.height);
 			this.drawBufferContext.fillStyle = '#000';
@@ -352,6 +353,7 @@ var Col = (function(){
 				me.context.putImageData(me.wheelData['d' + me.saturation], 0, 0);
 				me.drawing = false;
 				me.drawSelectionPip();
+				me.saturationSelector.disabled = false;
 			}
 			this.drawing = true;
 			setTimeout(drawCircle, 0);
