@@ -34,6 +34,31 @@ var Col = (function(){
 		}
 	}
 
+	var appendControlRow = function() {
+		if(arguments.length < 2)
+			return;
+		var parent = arguments[0],
+			row = El('div', {'class':'color-thing-control-row'}),
+			numArgs = arguments.length,
+			item = null;
+		for(var i = 1; i < numArgs; i++) {
+			if(typeof arguments[i] == 'object') {
+				item = El('div', {'class':'color-thing-control-item'});
+				try {
+					item.appendChild(arguments[i]);
+					row.appendChild(item);
+				} catch(e) {
+					//do nothing.
+				}
+			} else {
+				item = El('div', {'class':'color-thing-control-text'});
+				item.textContent = arguments[i];
+				row.appendChild(item);
+			}
+		}
+		parent.appendChild(row);
+	}
+
 	var drawHorizontalLine = function(instance, data, startX, endX, y, centerX, centerY) {
 		if(startX > endX) {
 			var tmp = startX;
@@ -63,14 +88,22 @@ var Col = (function(){
 		var ox = (w / 2), oy = (h / 2);	//origin for point calculations
 
 		this.parentContainer = container;
-		this.container = El('div', {'class':'color-thing','style' : {'width': w,'height': h,'padding':0,'margin':0}});
+		this.container = El('div', {'class':'color-thing-container'});
 		this.canvas = El('canvas', {'width': w,'height': h, 'style' : {'width': w,'height': h}});
+		this.controls = El('div', {'class': 'color-thing-controls'});
+		this.saturationDropdown = El('select');
 		this.parentContainer.appendChild(this.container);
 		this.container.appendChild(this.canvas);
+		this.container.appendChild(this.controls);
+		appendControlRow(this.controls, 'Saturation', this.saturationDropdown);
 		this.saturation = 1;
 		this.drawing = false;
 		this.numLinesDrawn = 0;
 		this.numLinesToDraw = 0;
+
+		for(var i = 100; i >= 0; i -= 5) {
+			this.saturationDropdown.add(new Option(i + '%', i / 100));
+		}
 
 		this.context = this.canvas.getContext('2d');
 
@@ -138,6 +171,9 @@ var Col = (function(){
 		Attach(this.canvas, 'mouseout', function(e){
 			if(pipDrawn)
 				clearPip();
+		});
+		Attach(this.saturationDropdown, 'change', function(e){
+			me.draw(e.target.value);
 		});
 
 		me.draw();
@@ -257,6 +293,13 @@ var Col = (function(){
 		this.context.fill();
 	}
 
+	Col.prototype.show = function(positionX, positionY){
+
+	}
+
+	Col.prototype.attachTo = function(element){
+
+	}
 
 	Col.prototype.debug = function(element) {
 		this.debugElement = element;
