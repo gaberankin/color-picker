@@ -2,23 +2,43 @@
 <html>
 	<head>
 		<script type="text/javascript" src="col.js"></script>
+		<style type="text/css">
+			body, html {
+				padding: 0;
+				margin: 0;
+				font-family: Arial, Helvetica;
+				font-size: 12pt;
+			}
+			.container {
+				width: 800px;
+				margin: 10px auto;
+			}
+			@media (max-width: 800px) {
+				body {
+					padding: 10px;
+				}
+				.container {
+					margin:0;
+					width: 100%;
+				}
+			}
+		</style>
 	</head>
 	<body>
-		<h1>Here's another bloody color picker</h1>
-		<p>It's not done yet.  I'm just experimenting with the canvas at this point.</p>
-		<div id="col-test"></div>
-		<div id="debug"></div>
-		<script type="text/javascript">
-		var c = new Col(document.getElementById('col-test'));
-		c.debug(document.getElementById('debug'));
-		</script>
+		<div class="container">
+			<h1>Here's another bloody color picker</h1>
+			<p>It's not done yet.  I'm just experimenting with the canvas at this point.</p>
+			<div id="col-test"></div>
+			<div id="debug"></div>
+			<script type="text/javascript">
+			var c = new Col(document.getElementById('col-test'));
+			c.debug(document.getElementById('debug'));
+			</script>
 
-		<h3>Notes</h3>
-		<ul>
-			<li>Generation of the picker isn't quick.  this is because we're drawing the circle pixel-by-pixel.  However, I've gotten it as fast as possible by manually manipulating the values in the image data and then plopping the whole thing into the canvas context once rather than once per pixel (don't do that - it makes browsers sad).</li>
-			<li>Thanks to <a href="http://stackoverflow.com/questions/10878209/midpoint-circle-algorithm-for-filled-circles">this stackoverflow item</a> for the inspiration on how to fix my pixel drawing redundancy issues by introducing me to the midpoint circle algorithm</li>
-			<li>Firefox isn't picking up mouse events.</li>
-			<li>Haven't tested on IE yet.  I am scared to.</li>
-		</ul>
+			<p>As it is right now, it's a pretty little widget thing.  It's not yet good for much else.  I'm not certain how to make proper use of it.  <strong>Suggestions are welcome!</strong></p>
+			<p>The Github repo is <a href="http://github.com/gaberankin/color-picker">here</a>.  Please use the issues on this repository to report problems you notice, or for feature requests.  <strong>Please note that I do not plan to support IE8 and below, and it's possible there will be no support for IE9.</strong></p>
+			<p>Generation of the picker isn't quick.  this is because we're drawing the circle pixel-by-pixel.  However, I've gotten it as fast as possible by manually manipulating the values in the image data and then plopping the whole thing into the canvas context once rather than once per pixel (don't do that - it makes browsers sad).</p>
+			<p>Thanks to <a href="http://stackoverflow.com/questions/10878209/midpoint-circle-algorithm-for-filled-circles">this stackoverflow item</a> for the inspiration on how to fix my pixel drawing redundancy issues by introducing me to the midpoint circle algorithm</p>
+		</div>
 	</body>
 </html>
