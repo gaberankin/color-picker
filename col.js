@@ -44,11 +44,28 @@ var Col = (function(){
 		for(var i = 1; i < numArgs; i++) {
 			if(typeof arguments[i] == 'object') {
 				item = El('div', {'class':'color-thing-control-item'});
-				try {
-					item.appendChild(arguments[i]);
+				if(arguments[i] instanceof Array) {
+					for(var j in arguments[i]) {
+						if(typeof arguments[i][j] == 'object') {
+							try {
+								item.appendChild(arguments[i][j]);
+							} catch(e) {
+								//do nothing.
+							}					
+						} else {
+							t = El('span', {'class':'color-thing-control-text'});
+							t.textContent = arguments[i][j];
+							item.appendChild(t);
+						}
+					}
 					row.appendChild(item);
-				} catch(e) {
-					//do nothing.
+				} else {
+					try {
+						item.appendChild(arguments[i]);
+						row.appendChild(item);
+					} catch(e) {
+						//do nothing.
+					}					
 				}
 			} else {
 				item = El('div', {'class':'color-thing-control-text'});
@@ -86,18 +103,36 @@ var Col = (function(){
 	var Col = function(container){
 		var w = h = 256;
 		var ox = (w / 2), oy = (h / 2);	//origin for point calculations
+		var me = this;
 
 		this.parentContainer = container;
-		this.container = El('div', {'class':'color-thing-container'});
+		this.container = El('div', {'class':'color-thing-container', 'style': {'position':'relative'}});	//position relative for firefox mouse-event fix
 		this.canvas = El('canvas', {'width': w,'height': h, 'style' : {'width': w,'height': h}});
 		this.drawBuffer = El('canvas', {'width': w,'height': h, 'style' : {'width': w,'height': h}});
 		this.controls = El('div', {'class': 'color-thing-controls'});
-		this.saturationDropdown = El('select');
 		this.parentContainer.appendChild(this.container);
 		this.container.appendChild(this.canvas);
 		this.container.appendChild(this.controls);
-		appendControlRow(this.controls, 'Saturation', this.saturationDropdown);
-		
+ 
+ 		this.saturationSelector = El('input',{ 'type':'range', 'min': '0', 'max': '100', 'value': '100' });
+		this.saturationSelectorVal = null;
+		if(this.saturationSelector.type !== 'range'){	//fallback to select element
+			this.saturationSelector = El('select');
+			for(var i = 100; i >= 0; i -= 1) {
+				this.saturationSelector.add(new Option(i + '%', i));
+			}
+			appendControlRow(this.controls, 'Saturation', this.saturationSelector);
+		} else {
+			this.saturationSelectorVal = El('span', {'class':'color-thing-selector-value'});
+			this.saturationSelectorVal.textContent = '100%';
+			appendControlRow(this.controls, 'Saturation', [this.saturationSelector, this.saturationSelectorVal]);
+			Attach(this.saturationSelector, 'input', function(e){
+				me.saturationSelectorVal.textContent = e.target.value+'%';
+			});
+
+		}
+
+
 		this.saturation = 1;
 		this.drawing = false;
 		this.numLinesDrawn = 0;
@@ -111,9 +146,6 @@ var Col = (function(){
 			y: null
 		};
 
-		for(var i = 100; i >= 0; i -= 5) {
-			this.saturationDropdown.add(new Option(i + '%', i / 100));
-		}
 
 		this.context = this.canvas.getContext('2d');
 		this.drawBufferContext = this.drawBuffer.getContext('2d');
@@ -123,8 +155,6 @@ var Col = (function(){
 		}
 		this.wheelData = {};
 		var pipDrawn = false;
-
-		me = this;
 
 		var drawMousePip = function(x, y){
 			me.draw();
@@ -141,7 +171,7 @@ var Col = (function(){
 
 			me.context.beginPath();
 			me.context.strokeStyle = '#000';
-			me.context.setLineDash([0]);
+			me.context.setLineDash([]);
 			me.context.lineWidth = 1;
 			me.context.moveTo(x - 5, y);
 			me.context.lineTo(x + 5, y);
@@ -157,12 +187,20 @@ var Col = (function(){
 		Attach(this.canvas, 'mousemove', function(e) {
 			if(me.drawing)
 				return;
-			var x = e.offsetX - ox;
-			var y = e.offsetY - oy;
+			var actualX, actualY;
+			if (e.layerX || e.layerX == 0) {
+				actualX = e.layerX;
+				actualY = e.layerY;
+			} else if(e.offsetX || e.offsetX == 0){
+				actualX = e.offsetX;
+				actualY = e.offsetY;
+			}
+			var x = actualX - ox;
+			var y = actualY - oy;
 			dist = Math.sqrt(x*x + y*y);
 
 			if(dist <= ox) {
-				drawMousePip(e.offsetX, e.offsetY);
+				drawMousePip(actualX, actualY);
 				angle = Math.atan2(y, x) * 180 / Math.PI;
 				h = angle / 360;
 				l = 1 - (dist / 128);
@@ -185,8 +223,16 @@ var Col = (function(){
 		});
 		Attach(this.canvas, 'click', function(e){
 			//draw the pip used to select a color.
-			var x = e.offsetX - ox;
-			var y = e.offsetY - oy;
+			var actualX, actualY;
+			if (e.layerX || e.layerX == 0) {
+				actualX = e.layerX;
+				actualY = e.layerY;
+			} else if(e.offsetX || e.offsetX == 0){
+				actualX = e.offsetX;
+				actualY = e.offsetY;
+			}
+			var x = actualX - ox;
+			var y = actualY - oy;
 			dist = Math.sqrt(x*x + y*y);
 
 			if(dist <= ox) {
@@ -200,15 +246,17 @@ var Col = (function(){
 					hsl: [h,me.saturation,l],
 					ox: x,
 					oy: y,
-					x: e.offsetX,
-					y: e.offsetY
+					x: actualX,
+					y: actualY
 				};
 
 				me.draw();
 			}
 		});
-		Attach(this.saturationDropdown, 'change', function(e){
-			me.draw(e.target.value);
+		Attach(this.saturationSelector, 'change', function(e){
+			if(me.saturationSelectorVal)
+				me.saturationSelectorVal.textContent = e.target.value+'%';
+			me.draw(e.target.value/100);
 		});
 
 		//initialize context with black so progress bar on initial draw is visible.
@@ -324,7 +372,7 @@ var Col = (function(){
 		var progressBarProgressWidth = Math.round(this.numLinesDrawn / this.numLinesToDraw * progressBarWidth);
 
 		this.context.beginPath();
-		this.context.setLineDash([0]);
+		this.context.setLineDash([]);
 		this.context.lineWidth="1";
 		this.context.strokeStyle="#fff";
 		this.context.rect(rx,ry,progressBarWidth,progressBarHeight);
@@ -343,12 +391,19 @@ var Col = (function(){
 				this.context.strokeStyle = 'rgba(0,0,0,1)';
 			else
 				this.context.strokeStyle = 'rgba(255,255,255,1)';
+			this.context.setLineDash([]);
 			this.context.moveTo(this.selection.x - 5, this.selection.y);
 			this.context.lineTo(this.selection.x + 5, this.selection.y);
 			this.context.moveTo(this.selection.x, this.selection.y - 5);
 			this.context.lineTo(this.selection.x, this.selection.y + 5);
 			this.context.stroke();
 		}
+	}
+
+	Col.prototype.setSaturation = function(saturation) {
+		saturation = Math.floor(saturation * 100);
+		this.saturationSelector.value = saturation;
+		this.draw(saturation / 100);
 	}
 
 	Col.prototype.rgb = function(){
@@ -368,13 +423,12 @@ var Col = (function(){
 		hsl = Col.rgbToHsl(r, g, b);
 		this.selection.rgb = [r, g, b];
 		this.selection.hsl = hsl;
-		this.saturation = hsl[1];
 		var xy = Col.hueAndLuminanceToXY(hsl[0], hsl[2]);
 		this.selection.x = xy[0] + 128;
 		this.selection.y = xy[1] + 128;
 		this.selection.ox = xy[0];
 		this.selection.oy = xy[1];
-		this.draw();
+		this.setSaturation(hsl[1]);
 	}
 
 	Col.prototype.show = function(positionX, positionY){
