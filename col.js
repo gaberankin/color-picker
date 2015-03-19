@@ -90,22 +90,33 @@ var Col = (function(){
 		this.parentContainer = container;
 		this.container = El('div', {'class':'color-thing-container'});
 		this.canvas = El('canvas', {'width': w,'height': h, 'style' : {'width': w,'height': h}});
+		this.drawBuffer = El('canvas', {'width': w,'height': h, 'style' : {'width': w,'height': h}});
 		this.controls = El('div', {'class': 'color-thing-controls'});
 		this.saturationDropdown = El('select');
 		this.parentContainer.appendChild(this.container);
 		this.container.appendChild(this.canvas);
 		this.container.appendChild(this.controls);
 		appendControlRow(this.controls, 'Saturation', this.saturationDropdown);
+		
 		this.saturation = 1;
 		this.drawing = false;
 		this.numLinesDrawn = 0;
 		this.numLinesToDraw = 0;
+		this.selection = {
+			rgb: null,
+			hsl: null,
+			ox: null,
+			oy: null,
+			x: null,
+			y: null
+		};
 
 		for(var i = 100; i >= 0; i -= 5) {
 			this.saturationDropdown.add(new Option(i + '%', i / 100));
 		}
 
 		this.context = this.canvas.getContext('2d');
+		this.drawBufferContext = this.drawBuffer.getContext('2d');
 
 		if (!this.context.setLineDash) {
 			this.context.setLineDash = function () {}
@@ -115,7 +126,7 @@ var Col = (function(){
 
 		me = this;
 
-		var drawPip = function(x, y){
+		var drawMousePip = function(x, y){
 			me.draw();
 			pipDrawn = true;
 			me.context.beginPath();
@@ -138,7 +149,7 @@ var Col = (function(){
 			me.context.lineTo(x, y + 5);
 			me.context.stroke();
 		}
-		var clearPip = function() {
+		var clearMousePip = function() {
 			me.draw();
 			pipDrawn = false;
 		}
@@ -151,7 +162,7 @@ var Col = (function(){
 			dist = Math.sqrt(x*x + y*y);
 
 			if(dist <= ox) {
-				drawPip(e.offsetX, e.offsetY);
+				drawMousePip(e.offsetX, e.offsetY);
 				angle = Math.atan2(y, x) * 180 / Math.PI;
 				h = angle / 360;
 				l = 1 - (dist / 128);
@@ -165,17 +176,47 @@ var Col = (function(){
 				);
 			} else {
 				if(pipDrawn)
-					clearPip();
+					clearMousePip();
 			}
 		});
 		Attach(this.canvas, 'mouseout', function(e){
 			if(pipDrawn)
-				clearPip();
+				clearMousePip();
+		});
+		Attach(this.canvas, 'click', function(e){
+			//draw the pip used to select a color.
+			var x = e.offsetX - ox;
+			var y = e.offsetY - oy;
+			dist = Math.sqrt(x*x + y*y);
+
+			if(dist <= ox) {
+				angle = Math.atan2(y, x) * 180 / Math.PI;
+				h = angle / 360;
+				l = 1 - (dist / 128);
+				rgb = Col.hslToRgb(h,me.saturation,l);
+
+				me.selection = {
+					rgb: rgb,
+					hsl: [h,me.saturation,l],
+					ox: x,
+					oy: y,
+					x: e.offsetX,
+					y: e.offsetY
+				};
+
+				me.draw();
+				console.log(rgb);
+			}
 		});
 		Attach(this.saturationDropdown, 'change', function(e){
 			me.draw(e.target.value);
 		});
 
+		//initialize context with black so progress bar on initial draw is visible.
+		this.context.beginPath();
+		this.context.rect(0, 0, this.canvas.width, this.canvas.height);
+		this.context.fillStyle = '#000';
+		this.context.fill();
 		me.draw();
 	}
 	/**
@@ -200,12 +241,12 @@ var Col = (function(){
 		if(this.wheelData['d' + this.saturation] === void 0) {
 			var imageData, imageDataData, centerX, centerY, x, y, radius, radiusError, startX, endX;
 
-			this.context.beginPath();
-			this.context.rect(0, 0, this.canvas.width, this.canvas.height);
-			this.context.fillStyle = '#000';
-			this.context.fill();
+			this.drawBufferContext.beginPath();
+			this.drawBufferContext.rect(0, 0, this.canvas.width, this.canvas.height);
+			this.drawBufferContext.fillStyle = '#000';
+			this.drawBufferContext.fill();
 
-			imageData = this.context.getImageData(0, 0, this.canvas.width, this.canvas.height);
+			imageData = this.drawBufferContext.getImageData(0, 0, this.canvas.width, this.canvas.height);
 			imageDataData = imageData.data;
 
 
@@ -254,15 +295,16 @@ var Col = (function(){
 					setTimeout(drawCircle, 0);
 					return;
 				}
-				me.context.putImageData(imageData, 0, 0);
-				me.context.beginPath();
-				me.context.arc(128, 128, 129, 0, 2 * Math.PI, false);
-				me.context.lineWidth = 1;
-				me.context.strokeStyle = 'rgba(255,255,255,0.3)';
-				me.context.stroke();
-				me.wheelData['d' + me.saturation] = me.context.getImageData(0,0, me.canvas.width, me.canvas.height);
-
+				me.drawBufferContext.putImageData(imageData, 0, 0);
+				me.drawBufferContext.beginPath();
+				me.drawBufferContext.arc(128, 128, 129, 0, 2 * Math.PI, false);
+				me.drawBufferContext.lineWidth = 1;
+				me.drawBufferContext.strokeStyle = 'rgba(255,255,255,0.3)';
+				me.drawBufferContext.stroke();
+				me.wheelData['d' + me.saturation] = me.drawBufferContext.getImageData(0,0, me.canvas.width, me.canvas.height);
+				me.context.putImageData(me.wheelData['d' + me.saturation], 0, 0);
 				me.drawing = false;
+				me.drawSelectionPip();
 			}
 			this.drawing = true;
 			setTimeout(drawCircle, 0);
@@ -271,6 +313,7 @@ var Col = (function(){
 		else
 		{
 			this.context.putImageData(this.wheelData['d' + this.saturation], 0, 0);
+			this.drawSelectionPip();
 		}
 	}
 
@@ -292,6 +335,23 @@ var Col = (function(){
 		this.context.rect(rx,ry,progressBarProgressWidth,progressBarHeight);
 		this.context.fill();
 	}
+
+	Col.prototype.drawSelectionPip = function(x, y, brightness) {
+		if(this.selection.x !== null && this.selection.y !== null && this.selection.hsl !== null){
+			this.context.beginPath();
+			this.context.lineWidth = 1;
+			if(this.selection.hsl[2] > 0.4)
+				this.context.strokeStyle = 'rgba(0,0,0,1)';
+			else
+				this.context.strokeStyle = 'rgba(255,255,255,1)';
+			this.context.moveTo(this.selection.x - 5, this.selection.y);
+			this.context.lineTo(this.selection.x + 5, this.selection.y);
+			this.context.moveTo(this.selection.x, this.selection.y - 5);
+			this.context.lineTo(this.selection.x, this.selection.y + 5);
+			this.context.stroke();
+		}
+	}
+
 
 	Col.prototype.show = function(positionX, positionY){
 
