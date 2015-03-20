@@ -424,7 +424,7 @@ var Col = (function(){
 	}
 
 	Col.prototype.setSaturation = function(saturation) {
-		saturation = Math.floor(saturation * 100);
+		saturation = Math.round(saturation * 100);
 		this.saturationSelector.value = saturation;
 		this.draw(saturation / 100);
 		this.fire('change');
