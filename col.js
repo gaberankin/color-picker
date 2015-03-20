@@ -100,10 +100,15 @@ var Col = (function(){
 		instance.numLinesDrawn++;
 	}
 
-	var Col = function(container){
+	var Col = function(container, options){
 		var w = h = 256;
 		var ox = (w / 2), oy = (h / 2);	//origin for point calculations
 		var me = this;
+
+		this.options = { fill: '#000' };
+		this.callbacks = {};
+		if(typeof options == 'object')
+			this.setOptions(options);
 
 		this.parentContainer = container;
 		this.container = El('div', {'class':'color-thing-container', 'style': {'position':'relative'}});	//position relative for firefox mouse-event fix
@@ -205,13 +210,14 @@ var Col = (function(){
 				h = angle / 360;
 				l = 1 - (dist / 128);
 				rgb = Col.hslToRgb(h,me.saturation,l);
-
-				me.log(
-					"(X,Y) = (" + x + ", " + y + ")\n" + 
-					"angle = " + angle + "\n" + 
-					"Distance = " + dist + "\n" +
-					'<div style="background:rgb(' + rgb[0] + ',' + rgb[1] + ',' + rgb[2] + ');color:' + (l < 0.5 ? '#fff' : '#000') + ';">rgb(' + rgb[0] + ',' + rgb[1] + ',' + rgb[2] + ')</div>'
-				);
+				me.fire('mousemove', {
+					rgb: rgb,
+					hsl: [h, me.saturation, l],
+					ox: x,
+					oy: y,
+					x: actualX,
+					y: actualY
+				})
 			} else {
 				if(pipDrawn)
 					clearMousePip();
@@ -249,23 +255,38 @@ var Col = (function(){
 					x: actualX,
 					y: actualY
 				};
-
+				me.fire('change');
 				me.draw();
 			}
 		});
 		Attach(this.saturationSelector, 'change', function(e){
 			if(me.saturationSelectorVal)
-				me.saturationSelectorVal.textContent = e.target.value+'%';
+				me.saturationSelectorVal.textContent = e.target.value + '%';
 			me.draw(e.target.value/100);
 		});
 
-		//initialize context with black so progress bar on initial draw is visible.
+		//initialize context with fill so progress bar on initial draw is visible.
 		this.context.beginPath();
 		this.context.rect(0, 0, this.canvas.width, this.canvas.height);
-		this.context.fillStyle = '#000';
+		this.context.fillStyle = this.options.fill;
 		this.context.fill();
 		me.draw();
 	}
+
+	Col.prototype.setOptions = function(options) {
+		if(options instanceof Function) {
+			var opts = options();
+			if(typeof opts == 'object') {
+				for(var o in opts)
+					this.options[o] = opts[o];
+			}
+		} else {
+			for(var o in options)
+				this.options[o] = options[o];
+
+		}
+	}
+
 	/**
 	 *	Draws the color picker to the canvas.
 	 *	Note that it uses the wheelData array to see if the picker for the selected saturation has already
@@ -291,7 +312,7 @@ var Col = (function(){
 			this.saturationSelector.disabled = true;
 			this.drawBufferContext.beginPath();
 			this.drawBufferContext.rect(0, 0, this.canvas.width, this.canvas.height);
-			this.drawBufferContext.fillStyle = '#000';
+			this.drawBufferContext.fillStyle = this.options.fill;
 			this.drawBufferContext.fill();
 
 			imageData = this.drawBufferContext.getImageData(0, 0, this.canvas.width, this.canvas.height);
@@ -406,6 +427,8 @@ var Col = (function(){
 		saturation = Math.floor(saturation * 100);
 		this.saturationSelector.value = saturation;
 		this.draw(saturation / 100);
+		this.fire('change');
+		return this;
 	}
 
 	Col.prototype.rgb = function(){
@@ -431,23 +454,39 @@ var Col = (function(){
 		this.selection.ox = xy[0];
 		this.selection.oy = xy[1];
 		this.setSaturation(hsl[1]);
+		return this;
 	}
 
-	Col.prototype.show = function(positionX, positionY){
-
-	}
-
-	Col.prototype.attachTo = function(element){
-
-	}
-
-	Col.prototype.debug = function(element) {
-		this.debugElement = element;
-		this.log = function(str) {
-			this.debugElement.innerHTML = str.replace(/\n/g, '<br />');
+	Col.prototype.on = function(eventType, cb) {
+		if(this.callbacks[eventType] === void 0){
+			this.callbacks[eventType] = [];
 		}
+		this.callbacks[eventType].push(cb);
+		return this;
 	}
-	Col.prototype.log = function(){}
+	Col.prototype.off = function(eventType, cb) {
+		if(this.callbacks[eventType] === void 0)
+			return;
+		var newCallbacks = [];
+		for(var i = 0, numCBs = this.callbacks[eventType].length; i < numCBs; i++) {
+			if(this.callbacks[eventType][i] !== cb) {
+				newCallbacks.push(this.callbacks[eventType][i]);
+			}
+		}
+		this.callbacks[eventType] = newCallbacks;
+		return this;
+	}
+
+	Col.prototype.fire = function(eventType, data){
+		if(!data)
+			data = this.selection;
+		if(this.callbacks[eventType] !== void 0) {
+			for(var i = 0, numCBs = this.callbacks[eventType].length; i < numCBs; i++) {
+				this.callbacks[eventType][i].apply(window, [data]);
+			}
+		}
+		return this;
+	}
 
 	/**
 	 * http://stackoverflow.com/questions/2353211/hsl-to-rgb-color-conversion

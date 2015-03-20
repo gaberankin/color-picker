@@ -29,10 +29,41 @@
 			<h1>Here's another bloody color picker</h1>
 			<p>It's not done yet.  I'm just experimenting with the canvas at this point.</p>
 			<div id="col-test"></div>
-			<div id="debug"></div>
+			<table>
+				<tr>
+					<td>Currently moused-over color</td>
+					<td id="hover"></td>
+				</tr>
+				<tr>
+					<td>Currently selected color</td>
+					<td id="selected"></td>
+				</tr>
+			</table>
+			
 			<script type="text/javascript">
 			var c = new Col(document.getElementById('col-test'));
-			c.debug(document.getElementById('debug'));
+			c.on('change', function(info){
+				var selected = document.getElementById('selected');
+				if(info.rgb) {
+					selected.style.backgroundColor = 'rgb('+info.rgb[0]+', '+info.rgb[1]+', '+info.rgb[2]+')';
+					selected.innerHTML = 'rgb('+info.rgb[0]+', '+info.rgb[1]+', '+info.rgb[2]+')';
+					if(info.hsl[2] > 0.4)
+						selected.style.color = '#000';
+					else
+						selected.style.color = '#fff';
+				}
+			}).on('mousemove', function(info){
+				var hover = document.getElementById('hover');
+				if(info.rgb) {
+					hover.style.backgroundColor = 'rgb('+info.rgb[0]+', '+info.rgb[1]+', '+info.rgb[2]+')';
+					hover.innerHTML = 'rgb('+info.rgb[0]+', '+info.rgb[1]+', '+info.rgb[2]+')';
+					if(info.hsl[2] > 0.4)
+						hover.style.color = '#000';
+					else
+						hover.style.color = '#fff';
+				}
+			})
+			// c.debug(document.getElementById('debug'));
 			</script>
 
 			<p>As it is right now, it's a pretty little widget thing.  It's not yet good for much else.  I'm not certain how to make proper use of it.  <strong>Suggestions are welcome!</strong></p>
