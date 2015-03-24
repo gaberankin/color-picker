@@ -2,9 +2,34 @@
 <html>
 	<head>
 		<script type="text/javascript" data-main="example" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.1.16/require.js"></script>
+		<style type="text/css">
+			body, html {
+				padding: 0;
+				margin: 0;
+				font-family: Arial, Helvetica;
+				font-size: 12pt;
+			}
+			.container {
+				width: 800px;
+				margin: 10px auto;
+			}
+			@media (max-width: 800px) {
+				body {
+					padding: 10px;
+				}
+				.container {
+					margin:0;
+					width: 100%;
+				}
+			}
+		</style>
 	</head>
 	<body>
-		<div id="picker"></div>
-		<p>This demo shows how to include the picker with requirejs.</p>
+		<div class="container">
+			<h1>RequireJS Example</h1>
+			<div id="picker"></div>
+			<p>This demo shows how to include the picker with requirejs.</p>
+			<p><a href="../..">Return</a></p>
+		</div>
 	</body>
 </html>

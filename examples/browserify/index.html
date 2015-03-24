@@ -2,13 +2,38 @@
 <html>
 	<head>
 		<script type="text/javascript" src="example-browserified.js"></script>
+		<style type="text/css">
+			body, html {
+				padding: 0;
+				margin: 0;
+				font-family: Arial, Helvetica;
+				font-size: 12pt;
+			}
+			.container {
+				width: 800px;
+				margin: 10px auto;
+			}
+			@media (max-width: 800px) {
+				body {
+					padding: 10px;
+				}
+				.container {
+					margin:0;
+					width: 100%;
+				}
+			}
+		</style>
 	</head>
 	<body>
-		<div id="picker"></div>
-		<p>In this example, I started with an example.js, following conventions defined by CommonJS (by using require() to include the col.js lib).</p>
-		<p>Then, I ran browserify on it to create example-browserified.js using this command:</p>
-		<code>
-		browserify example.js -o example-browserified.js
-		</code>
+		<div class="container">
+			<h1>Browserify Example</h1>
+			<div id="picker"></div>
+			<p>In this example, I started with an example.js, following conventions defined by CommonJS (by using require() to include the col.js lib).</p>
+			<p>Then, I ran browserify on it to create example-browserified.js using this command:</p>
+			<code>
+			browserify example.js -o example-browserified.js
+			</code>
+			<p><a href="../..">Return</a></p>
+		</div>
 	</body>
 </html>
