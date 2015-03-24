@@ -1,12 +1,14 @@
-var Col = (function(){
+(function(){
+
+	var root = this;
 
 	var El = function(tagName, attributes) {
 		el = document.createElement(tagName);
 		if(attributes && typeof attributes == 'object') {
-			for(attr in attributes) {
+			for(var attr in attributes) {
 				if(attr == 'style'){
 					if(typeof attributes.style == 'object') {
-						for(css in attributes.style) {
+						for(var css in attributes.style) {
 							if((css == 'width' || css == 'height' || css == 'padding' || css == 'margin') && typeof attributes.style[css] == 'number')
 								attributes.style[css] = attributes.style[css] + 'px';
 							el.style[css] = attributes.style[css];
@@ -18,7 +20,7 @@ var Col = (function(){
 			}
 		}
 		return el;
-	}
+	};
 	var Attach = function(){};
 
  	if (document.addEventListener) {  // all browsers except IE before version 9
@@ -29,7 +31,7 @@ var Col = (function(){
  			for(var x = 0; x < numEvents; x++)
  				if(events[x])
 					element.addEventListener(events[x], func, useCapture);
-		}
+		};
 	} else {
 		if (document.attachEvent) {   // IE before version 9.  I don't know why this code is here...  it's not like it's supported....
 	 		Attach = function(element, eventName, func, useCapture) {
@@ -38,7 +40,7 @@ var Col = (function(){
 	 			for(var x = 0; x < numEvents; x++)
 	 				if(events[x])
 						element.attachEvent('on' + events[x], func);
-			}
+			};
 		}
 	}
 	/**
@@ -90,7 +92,7 @@ var Col = (function(){
 			}
 		}
 		parent.appendChild(row);
-	}
+	};
 
 	var drawHorizontalLine = function(instance, data, startX, endX, y, centerX, centerY) {
 		if(startX > endX) {
@@ -114,10 +116,11 @@ var Col = (function(){
 		}
 		instance.drawProgress();
 		instance.numLinesDrawn++;
-	}
+	};
 
 	var Col = function(container, options){
-		var w = h = 256;
+		var w = 256,
+			h = 256;
 		var ox = (w / 2), oy = (h / 2);	//origin for point calculations
 		var me = this;
 
@@ -193,7 +196,7 @@ var Col = (function(){
 		this.drawBufferContext = this.drawBuffer.getContext('2d');
 
 		if (!this.context.setLineDash) {
-			this.context.setLineDash = function () {}
+			this.context.setLineDash = function () {};
 		}
 		this.wheelData = {};
 		var pipDrawn = false;
@@ -220,20 +223,20 @@ var Col = (function(){
 			me.context.moveTo(x, y - 5);
 			me.context.lineTo(x, y + 5);
 			me.context.stroke();
-		}
+		};
 		var clearMousePip = function() {
 			me.draw();
 			pipDrawn = false;
-		}
+		};
 
 		Attach(this.canvas, 'mousemove', function(e) {
 			if(me.drawing)
 				return;
 			var actualX, actualY;
-			if (e.layerX || e.layerX == 0) {
+			if (e.layerX || e.layerX === 0) {
 				actualX = e.layerX;
 				actualY = e.layerY;
-			} else if(e.offsetX || e.offsetX == 0){
+			} else if(e.offsetX || e.offsetX === 0){
 				actualX = e.offsetX;
 				actualY = e.offsetY;
 			}
@@ -254,7 +257,7 @@ var Col = (function(){
 					oy: y,
 					x: actualX,
 					y: actualY
-				})
+				});
 			} else {
 				if(pipDrawn)
 					clearMousePip();
@@ -267,10 +270,10 @@ var Col = (function(){
 		Attach(this.canvas, 'click', function(e){
 			//draw the pip used to select a color.
 			var actualX, actualY;
-			if (e.layerX || e.layerX == 0) {
+			if (e.layerX || e.layerX === 0) {
 				actualX = e.layerX;
 				actualY = e.layerY;
-			} else if(e.offsetX || e.offsetX == 0){
+			} else if(e.offsetX || e.offsetX === 0){
 				actualX = e.offsetX;
 				actualY = e.offsetY;
 			}
@@ -303,21 +306,22 @@ var Col = (function(){
 		this.context.fillStyle = this.options.fill;
 		this.context.fill();
 		me.draw();
-	}
+	};
 
 	Col.prototype.setOptions = function(options) {
+		var o;
 		if(options instanceof Function) {
 			var opts = options();
 			if(typeof opts == 'object') {
-				for(var o in opts)
+				for(o in opts)
 					this.options[o] = opts[o];
 			}
 		} else {
-			for(var o in options)
+			for(o in options)
 				this.options[o] = options[o];
 
 		}
-	}
+	};
 
 	/**
 	 *	Draws the color picker to the canvas.
@@ -328,7 +332,7 @@ var Col = (function(){
 	Col.prototype.draw = function(saturation){
 		if(this.drawing) {
 			try {
-				console.error("Please wait while process completes before attempting to call draw method.")
+				console.error("Please wait while process completes before attempting to call draw method.");
 			} catch(e){
 
 			}
@@ -351,8 +355,8 @@ var Col = (function(){
 			imageDataData = imageData.data;
 
 
-			centerX = Math.round(this.canvas.width / 2),
-			centerY = Math.round(this.canvas.height / 2),
+			centerX = Math.round(this.canvas.width / 2);
+			centerY = Math.round(this.canvas.height / 2);
 			radius = 128;
 			this.numLinesToDraw = radius * 2 + 1;
 			
@@ -369,7 +373,7 @@ var Col = (function(){
 					startX = -x + centerX;
 					endX = x + centerX;         
 					drawHorizontalLine(me, imageDataData, startX, endX, y + centerY, centerX, centerY );
-					if (y != 0) {
+					if (y !== 0) {
 						drawHorizontalLine(me, imageDataData, startX, endX, -y + centerY , centerX, centerY);
 					}
 
@@ -377,7 +381,7 @@ var Col = (function(){
 					y++;
 
 					// calculate or maintain new x
-					if (radiusError<0) {
+					if (radiusError < 0) {
 						radiusError += 2 * y + 1;
 					} else {
 						// we're about to move x over one, this means we completed a column of X values, use
@@ -407,7 +411,7 @@ var Col = (function(){
 				me.drawing = false;
 				me.drawSelectionPip();
 				me.saturationSelector.disabled = false;
-			}
+			};
 			this.drawing = true;
 			setTimeout(drawCircle, 0);
 
@@ -417,7 +421,7 @@ var Col = (function(){
 			this.context.putImageData(this.wheelData['d' + this.saturation], 0, 0);
 			this.drawSelectionPip();
 		}
-	}
+	};
 
 	Col.prototype.drawProgress = function() {
 		var progressBarWidth = 100,
@@ -436,7 +440,7 @@ var Col = (function(){
 		this.context.fillStyle="#fff";
 		this.context.rect(rx,ry,progressBarProgressWidth,progressBarHeight);
 		this.context.fill();
-	}
+	};
 
 	Col.prototype.drawSelectionPip = function(x, y, brightness) {
 		if(this.selection.x !== null && this.selection.y !== null && this.selection.hsl !== null){
@@ -453,7 +457,7 @@ var Col = (function(){
 			this.context.lineTo(this.selection.x, this.selection.y + 5);
 			this.context.stroke();
 		}
-	}
+	};
 
 	Col.prototype.setSaturation = function(saturation) {
 		saturation = Math.round(saturation * 100);
@@ -463,11 +467,11 @@ var Col = (function(){
 		this.draw(saturation / 100);
 		this.fire('change');
 		return this;
-	}
+	};
 
 	Col.prototype.rgb = function(){
-		if(arguments.length == 0) {
-			return this.selection.rgb
+		if(arguments.length === 0) {
+			return this.selection.rgb;
 		}
 		var r = arguments[0] * 1, g, b;
 		if(arguments[1] === void 0)
@@ -489,10 +493,10 @@ var Col = (function(){
 		this.selection.oy = xy[1];
 		this.setSaturation(hsl[1]);
 		return this;
-	}
+	};
 
 	Col.prototype.hsl = function(){
-		if(arguments.length == 0) {
+		if(arguments.length === 0) {
 			return this.selection.hsl;
 		}
 		var h = arguments[0] * 1, s, l;
@@ -514,7 +518,7 @@ var Col = (function(){
 		this.selection.oy = xy[1];
 		this.setSaturation(s);
 		return this;
-	}
+	};
 
 	Col.prototype.on = function(eventType, cb) {
 		if(this.callbacks[eventType] === void 0){
@@ -522,7 +526,7 @@ var Col = (function(){
 		}
 		this.callbacks[eventType].push(cb);
 		return this;
-	}
+	};
 	Col.prototype.off = function(eventType, cb) {
 		if(this.callbacks[eventType] === void 0)
 			return;
@@ -534,18 +538,18 @@ var Col = (function(){
 		}
 		this.callbacks[eventType] = newCallbacks;
 		return this;
-	}
+	};
 
 	Col.prototype.fire = function(eventType, data){
 		if(!data)
 			data = this.selection;
 		if(this.callbacks[eventType] !== void 0) {
 			for(var i = 0, numCBs = this.callbacks[eventType].length; i < numCBs; i++) {
-				this.callbacks[eventType][i].apply(window, [data]);
+				this.callbacks[eventType][i].apply(root, [data]);
 			}
 		}
 		return this;
-	}
+	};
 
 	/**
 	 * http://stackoverflow.com/questions/2353211/hsl-to-rgb-color-conversion
@@ -558,7 +562,7 @@ var Col = (function(){
 		if(t < 1/2) return q;
 		if(t < 2/3) return p + (q - p) * (2/3 - t) * 6;
 		return p;
-	}
+	};
 
 	/**
 	 * http://stackoverflow.com/questions/2353211/hsl-to-rgb-color-conversion
@@ -575,7 +579,7 @@ var Col = (function(){
 	Col.hslToRgb = function(h, s, l){
 		var r, g, b;
 
-		if(s == 0){
+		if(s === 0){
 			r = g = b = l; // achromatic
 		} else {
 			var q = l < 0.5 ? l * (1 + s) : l + s - l * s;
@@ -586,7 +590,7 @@ var Col = (function(){
 		}
 
 		return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
-	}
+	};
 
 	/**
 	 * http://stackoverflow.com/questions/2353211/hsl-to-rgb-color-conversion
@@ -601,7 +605,9 @@ var Col = (function(){
 	 * @return  Array           The HSL representation
 	 */
 	Col.rgbToHsl = function(r, g, b){
-		r /= 255, g /= 255, b /= 255;
+		r /= 255;
+		g /= 255;
+		b /= 255;
 		var max = Math.max(r, g, b), min = Math.min(r, g, b);
 		var h, s, l = (max + min) / 2;
 
@@ -619,7 +625,7 @@ var Col = (function(){
 		}
 
 		return [h, s, l];
-	}
+	};
 
 	Col.hueAndLuminanceToXY = function(h,l) {
 		r = -128 * (l - 1);
@@ -627,7 +633,23 @@ var Col = (function(){
 		x = (r * Math.cos(rads));
 		y = (r * Math.sin(rads));
 		return [x, y];
+	};
+
+
+	// CommonJS registration
+	if (typeof exports !== 'undefined') {
+		if (typeof module !== 'undefined' && module.exports) {
+			exports = module.exports = Col;
+		}
+		exports.Col = Col;
+	} else {
+		root.Col = Col;
 	}
 
-	return Col;
-})();
+	// AMD registration
+	if (typeof define === 'function' && define.amd) {
+		define('col', [], function() {
+			return Col;
+		});
+	}
+}.call(this));

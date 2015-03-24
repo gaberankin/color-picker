@@ -1,5 +1,5 @@
 # Col
-Yet another color picker, built primarily to teach myself about the canvas.
+This element was built with the idea that maybe you just want a color wheel - nothing else.  You can build a more fully-featured color-picker with it, but the color wheel itself isn't so bad the way it is.
 
 Demo [here](http://gaberankin.github.io/color-picker/)
 
