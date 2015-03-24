@@ -458,6 +458,8 @@ var Col = (function(){
 	Col.prototype.setSaturation = function(saturation) {
 		saturation = Math.round(saturation * 100);
 		this.saturationSelector.value = saturation;
+		if(this.saturationSelectorVal)
+			this.saturationSelectorVal.textContent = saturation+'%';
 		this.draw(saturation / 100);
 		this.fire('change');
 		return this;
@@ -486,6 +488,31 @@ var Col = (function(){
 		this.selection.ox = xy[0];
 		this.selection.oy = xy[1];
 		this.setSaturation(hsl[1]);
+		return this;
+	}
+
+	Col.prototype.hsl = function(){
+		if(arguments.length == 0) {
+			return this.selection.hsl;
+		}
+		var h = arguments[0] * 1, s, l;
+		if(arguments[1] === void 0)
+			s = h;
+		else
+			s = arguments[1] * 1;
+		if(arguments[2] === void 0)
+			l = s;
+		else
+			l = arguments[2] * 1;
+		rgb = Col.hslToRgb(h, s, l);
+		this.selection.rgb = rgb;
+		this.selection.hsl = [h, s, l];
+		var xy = Col.hueAndLuminanceToXY(h, l);
+		this.selection.x = xy[0] + 128;
+		this.selection.y = xy[1] + 128;
+		this.selection.ox = xy[0];
+		this.selection.oy = xy[1];
+		this.setSaturation(s);
 		return this;
 	}
 

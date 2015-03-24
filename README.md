@@ -100,6 +100,23 @@ pickerInstance.rgb(255, 255, 255);	 //sets color to white.
 current = pickerInstance.rgb();	 //returns rgb color array that looks like [255, 255, 255]
 ```
 
+### `.hsl([h], [s], [l])`
+
+This function has two modes - as a setter and as a getter.
+ + Pass no arguments to run as a getter.  When run this way, the currently selected hsl value will be returned in an array of format [h, s, l]
+   + **returns null if no color is selected.**
+ + Pass with 3 arguments to run as a setter.  When run this way, the color wheel will update, the `change` event will fire, and the object will be returned (to support chaining)
+   + All three arguments are expected to be Numbers between 0 and 1 (inclusive).
+
+Example:
+```js
+var current = pickerInstance.hsl();	 //returns hsl color array, null if none selected.
+pickerInstance.hsl(0, 1, 1);	 //sets color to white.  note that the saturation value for white isn't important.  [0, 0, 1] will also give you white.
+current = pickerInstance.hsl();	 //returns hsl color array that looks like [0, 1, 1]
+pickerInstance.rgb(0, 0, 255);	 //sets color to blue using rgb.
+current = pickerInstance.hsl();	 //returns hsl color array that looks like [0.6666666666666666, 1, 0.5]
+```
+
 ## Class Methods
 
 ### `Col.hslToRgb(hue, saturation, luminance)`
