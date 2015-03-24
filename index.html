@@ -66,7 +66,7 @@
 			// c.debug(document.getElementById('debug'));
 			</script>
 
-			<p>As it is right now, it's a pretty little widget thing.  It's not yet good for much else.  I'm not certain how to make proper use of it.  <strong>Suggestions are welcome!</strong></p>
+			<p>As it is right now, it's a pretty little widget thing that enables users to wrap their own code around it to make more fully featured color pickers (an example of this can be found <a href="examples/wrapped">here</a>).  It's not yet good for much else.  I'm not certain how to make proper use of it.  <strong>Suggestions are welcome!</strong></p>
 			<p>The Github repo is <a href="http://github.com/gaberankin/color-picker">here</a>.  Please use the issues on this repository to report problems you notice, or for feature requests.  <strong>Please note that I do not plan to support IE8 and below.</strong>  IE9 <em>is</em> supported.  However, the saturation range selector switches to a &lt;select&gt; box, as &lt;input type="range"&gt; is not supported in IE9 and below.</p>
 			<p>Generation of the picker isn't quick.  this is because we're drawing the circle pixel-by-pixel.  However, I've gotten it as fast as possible by manually manipulating the values in the image data and then plopping the whole thing into the canvas context once rather than once per pixel (don't do that - it makes browsers sad).</p>
 			<p>Thanks to <a href="http://stackoverflow.com/questions/10878209/midpoint-circle-algorithm-for-filled-circles">this stackoverflow item</a> for the inspiration on how to fix my pixel drawing redundancy issues by introducing me to the midpoint circle algorithm</p>

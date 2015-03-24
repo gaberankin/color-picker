@@ -9,12 +9,21 @@ There are no dependancies that need to be included.  This was also one of the po
 Yes.  the name *is* dumb.  I toyed with calling it ColorPicker.  That would have been dumb too.  If you have a better name, mention it in the issues of this project.  I'd appreciate it.  I just called it Col because I am lazy.
 
 ## Usage
+
+### Super lazy way
+
 In your html HEAD:
 ```html
 	<script src="PATH TO COL.JS/col.js"></script>
 ```
 
-Then, when the document is loaded:
+### RequireJS or CommonJS (browserify)
+
+Refer to the examples in the examples directory
+
+### Actually making stuff happen
+
+When the document is loaded:
 
 ```js
 var pickerInstance = new Col(document.getElementById('id-of-container-element'));
@@ -124,11 +133,11 @@ current = pickerInstance.hsl();	 //returns hsl color array that looks like [0.66
 
 Converts an HSL color value to RGB. Conversion formula adapted from http://en.wikipedia.org/wiki/HSL_color_space.
 
-Assumes hue, saturation, and luminance are contained in the set [0, 1] and returns array of red, green, and blue in the set [0, 255].
+Assumes hue, saturation, and luminance are contained in the range [0, 1] and returns array of red, green, and blue in the range [0, 255].
 
 ### `Col.rgbToHsl(red, green, blue)`
 *Thanks to http://stackoverflow.com/questions/2353211/hsl-to-rgb-color-conversion*
 
 Converts an RGB color value to HSL. Conversion formula adapted from http://en.wikipedia.org/wiki/HSL_color_space.
 
-Assumes red, green, and blue are contained in the set [0, 255] and returns array of hue, saturation, and luminance in the set [0, 1].
+Assumes red, green, and blue are contained in the range [0, 255] and returns array of hue, saturation, and luminance in the range [0, 1].

@@ -52,6 +52,31 @@
 		var userAgent = navigator.userAgent;
 		return userAgent.indexOf('MSIE') !== -1 || userAgent.indexOf('Trident') !== -1;
 	};
+
+	/**
+	 * 	Namespace for functions that should be called on particular events.
+	 *	Used to simplify a few things that had to be repeated over and over.
+	 */
+	var ColEvents = {};
+	ColEvents.change = function() {
+		if(this.selection.ox !== null && this.selection.oy !== null) {
+			dist = Math.sqrt(this.selection.ox * this.selection.ox + this.selection.oy * this.selection.oy);
+			angle = Math.atan2(this.selection.oy, this.selection.ox) * 180 / Math.PI;
+			h = angle / 360;
+			s = this.saturation;
+			l = 1 - (dist / 128);
+
+			rgb = Col.hslToRgb(h, s, l);
+
+			this.selection.rgb = rgb;
+			this.selection.hsl = [h, s, l];
+
+		} else {
+			this.selection.rgb = null;
+			this.selection.hsl = null;
+		}
+	};
+
 	var appendControlRow = function() {
 		if(arguments.length < 2)
 			return;
@@ -170,6 +195,7 @@
 					if(me.saturationSelectorVal)
 						me.saturationSelectorVal.textContent = e.target.value + '%';
 					me.draw(e.target.value/100);
+					me.fire('change');
 				});
 				Attach(this.saturationSelector, 'input', function(e){
 					me.saturationSelectorVal.textContent = e.target.value+'%';
@@ -282,14 +308,9 @@
 			dist = Math.sqrt(x*x + y*y);
 
 			if(dist <= ox) {
-				angle = Math.atan2(y, x) * 180 / Math.PI;
-				h = angle / 360;
-				l = 1 - (dist / 128);
-				rgb = Col.hslToRgb(h,me.saturation,l);
-
 				me.selection = {
-					rgb: rgb,
-					hsl: [h,me.saturation,l],
+					rgb: null,
+					hsl: null,
 					ox: x,
 					oy: y,
 					x: actualX,
@@ -484,8 +505,7 @@
 			b = arguments[2] * 1;
 
 		hsl = Col.rgbToHsl(r, g, b);
-		this.selection.rgb = [r, g, b];
-		this.selection.hsl = hsl;
+
 		var xy = Col.hueAndLuminanceToXY(hsl[0], hsl[2]);
 		this.selection.x = xy[0] + 128;
 		this.selection.y = xy[1] + 128;
@@ -508,9 +528,10 @@
 			l = s;
 		else
 			l = arguments[2] * 1;
-		rgb = Col.hslToRgb(h, s, l);
-		this.selection.rgb = rgb;
-		this.selection.hsl = [h, s, l];
+		if(h > 1) h = 1;
+		if(s > 1) s = 1;
+		if(l > 1) l = 1;
+
 		var xy = Col.hueAndLuminanceToXY(h, l);
 		this.selection.x = xy[0] + 128;
 		this.selection.y = xy[1] + 128;
@@ -541,6 +562,10 @@
 	};
 
 	Col.prototype.fire = function(eventType, data){
+		if(ColEvents[eventType] !== void 0) {
+			ColEvents[eventType].apply(this);
+		}
+
 		if(!data)
 			data = this.selection;
 		if(this.callbacks[eventType] !== void 0) {
@@ -550,6 +575,15 @@
 		}
 		return this;
 	};
+
+	Col.prototype.addControl = function(){
+		var args = [this.controls],
+			numArgs = arguments.length;
+		for(var x = 0; x < numArgs; x++)	//convert arguments to an array, as it's not technically an array
+			args.push(arguments[x]);
+
+		appendControlRow.apply(root, args);
+	}
 
 	/**
 	 * http://stackoverflow.com/questions/2353211/hsl-to-rgb-color-conversion

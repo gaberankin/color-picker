@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<script type="text/javascript" src="../../col.js"></script>
+		<script type="text/javascript" src="col-wrapper.js"></script>
+		<style type="text/css">
+			body, html {
+				padding: 0;
+				margin: 0;
+				font-family: Arial, Helvetica;
+				font-size: 12pt;
+			}
+			.container {
+				width: 800px;
+				margin: 10px auto;
+			}
+			@media (max-width: 800px) {
+				body {
+					padding: 10px;
+				}
+				.container {
+					margin:0;
+					width: 100%;
+				}
+			}
+		</style>
+	</head>
+	<body>
+		<div class="container">
+			<div id="picker"></div>
+			<script type="text/javascript">
+			var colorpicker = new ColWrapper(document.getElementById('picker'));
+			</script>
+			<p>Here's a slightly more fully featured color picker, using the Col object as a base.</p>
+			<p>This example has shown me that I've still got a ways to go before this lib is very useful, as I've experienced strange rounding errors on some colors.</p>
+			<p><a href="../..">Return</a></p>
+		</div>
+	</body>
+</html>
