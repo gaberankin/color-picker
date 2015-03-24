@@ -23,17 +23,33 @@ var Col = (function(){
 
  	if (document.addEventListener) {  // all browsers except IE before version 9
  		Attach = function(element, eventName, func, useCapture) {
+ 			var events = eventName.split(' ');
+ 			var numEvents = events.length;
  			useCapture = useCapture === void 0 ? false : useCapture;
-			element.addEventListener(eventName, func, useCapture);
+ 			for(var x = 0; x < numEvents; x++)
+ 				if(events[x])
+					element.addEventListener(events[x], func, useCapture);
 		}
 	} else {
-		if (document.attachEvent) {   // IE before version 9
+		if (document.attachEvent) {   // IE before version 9.  I don't know why this code is here...  it's not like it's supported....
 	 		Attach = function(element, eventName, func, useCapture) {
-				element.attachEvent('on' + eventName, func);
+	 			var events = eventName.split(' ');
+	 			var numEvents = events.length;
+	 			for(var x = 0; x < numEvents; x++)
+	 				if(events[x])
+						element.attachEvent('on' + eventName, func);
 			}
 		}
 	}
-
+	/**
+	 * You know what's terrible?  user agent sniffing.
+	 *	You know what else is terrible?  IE doesn't fire change events on <input type="range"> elements the same way as
+	 *	other browsers (it doesn't fire input events at all)
+	 */
+	Attach.isIE = function() {
+		var userAgent = navigator.userAgent;
+		return userAgent.indexOf('MSIE') !== -1 || userAgent.indexOf('Trident') !== -1;
+	};
 	var appendControlRow = function() {
 		if(arguments.length < 2)
 			return;
@@ -127,14 +143,35 @@ var Col = (function(){
 				this.saturationSelector.add(new Option(i + '%', i));
 			}
 			appendControlRow(this.controls, 'Saturation', this.saturationSelector);
+			Attach(this.saturationSelector, 'change', function(e){
+				if(me.saturationSelectorVal)
+					me.saturationSelectorVal.textContent = e.target.value + '%';
+				me.draw(e.target.value/100);
+			});
 		} else {
 			this.saturationSelectorVal = El('span', {'class':'color-thing-selector-value'});
 			this.saturationSelectorVal.textContent = '100%';
 			appendControlRow(this.controls, 'Saturation', [this.saturationSelector, this.saturationSelectorVal]);
-			Attach(this.saturationSelector, 'input', function(e){
-				me.saturationSelectorVal.textContent = e.target.value+'%';
-			});
 
+			if(Attach.isIE()) {	//internet explorer doesn't correctly fire 'input' events for <input type="range">, so have to bind to mouseup
+				Attach(this.saturationSelector, 'mouseup keyup', function(e){
+					if(me.saturationSelectorVal)
+						me.saturationSelectorVal.textContent = e.target.value + '%';
+					setTimeout(function(){me.draw(e.target.value/100);}, 1);	//delay the draw - it causes interference with user interaction.
+				});
+				Attach(this.saturationSelector, 'change', function(e){
+					me.saturationSelectorVal.textContent = e.target.value+'%';
+				});
+			} else {
+				Attach(this.saturationSelector, 'change', function(e){
+					if(me.saturationSelectorVal)
+						me.saturationSelectorVal.textContent = e.target.value + '%';
+					me.draw(e.target.value/100);
+				});
+				Attach(this.saturationSelector, 'input', function(e){
+					me.saturationSelectorVal.textContent = e.target.value+'%';
+				});
+			}
 		}
 
 
@@ -258,11 +295,6 @@ var Col = (function(){
 				me.fire('change');
 				me.draw();
 			}
-		});
-		Attach(this.saturationSelector, 'change', function(e){
-			if(me.saturationSelectorVal)
-				me.saturationSelectorVal.textContent = e.target.value + '%';
-			me.draw(e.target.value/100);
 		});
 
 		//initialize context with fill so progress bar on initial draw is visible.
