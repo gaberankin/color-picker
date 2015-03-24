@@ -37,7 +37,7 @@ var Col = (function(){
 	 			var numEvents = events.length;
 	 			for(var x = 0; x < numEvents; x++)
 	 				if(events[x])
-						element.attachEvent('on' + eventName, func);
+						element.attachEvent('on' + events[x], func);
 			}
 		}
 	}
