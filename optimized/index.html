@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<script type="text/javascript" src="col.js"></script>
+		<style type="text/css">
+			body, html {
+				padding: 0;
+				margin: 0;
+				font-family: Arial, Helvetica;
+				font-size: 12pt;
+			}
+			.container {
+				width: 800px;
+				margin: 10px auto;
+			}
+			@media (max-width: 800px) {
+				body {
+					padding: 10px;
+				}
+				.container {
+					margin:0;
+					width: 100%;
+				}
+			}
+		</style>
+	</head>
+	<body>
+		<div class="container">
+			<h1>Here's another bloody color picker</h1>
+			<p>It's not done yet.  I'm just experimenting with the canvas at this point.</p>
+			<div id="col-test"></div>
+			<table>
+				<tr>
+					<td>Currently moused-over color</td>
+					<td id="hover"></td>
+				</tr>
+				<tr>
+					<td>Currently selected color</td>
+					<td id="selected"></td>
+				</tr>
+			</table>
+			
+			<script type="text/javascript">
+			var c = new Col(document.getElementById('col-test'));
+			c.on('change', function(info){
+				var selected = document.getElementById('selected');
+				if(info.rgb) {
+					selected.style.backgroundColor = 'rgb('+info.rgb[0]+', '+info.rgb[1]+', '+info.rgb[2]+')';
+					selected.innerHTML = 'rgb('+info.rgb[0]+', '+info.rgb[1]+', '+info.rgb[2]+')';
+					if(info.hsl[2] > 0.4)
+						selected.style.color = '#000';
+					else
+						selected.style.color = '#fff';
+				}
+			}).on('mousemove', function(info){
+				var hover = document.getElementById('hover');
+				if(info.rgb) {
+					hover.style.backgroundColor = 'rgb('+info.rgb[0]+', '+info.rgb[1]+', '+info.rgb[2]+')';
+					hover.innerHTML = 'rgb('+info.rgb[0]+', '+info.rgb[1]+', '+info.rgb[2]+')';
+					if(info.hsl[2] > 0.4)
+						hover.style.color = '#000';
+					else
+						hover.style.color = '#fff';
+				}
+			})
+			// c.debug(document.getElementById('debug'));
+			</script>
+			<p>This is an optimized version of the color picker.  It's not quite as fast as it could be, but it's a lot faster than the original version.  This version was built using gpt-5.3-codex with the focus on optimizing the code for performance.</p>
+			<p>The original version is <a href="https://github.com/gaberankin/color-picker">here</a>, and was written back in 2013 back when I thought I had optimized it as far as I could.  Turns out I was wrong!  the original version had a number of issues:</p>
+			<section style="margin-top: 24px;">
+				<h2>Optimization Summary</h2>
+				<p>
+					This demo uses an optimized rendering path for the original canvas-based color wheel.
+					The goal was to keep behavior the same while reducing wheel generation time and improving UI responsiveness.
+				</p>
+			
+				<h3>What Was Slow In The Original</h3>
+				<ul>
+					<li>Heavy per-pixel math in hot loops (`sqrt`, `atan2`, HSL conversion).</li>
+					<li>Rendering split across many tiny <code>setTimeout(..., 0)</code> calls.</li>
+					<li>Progress UI repainting too often during wheel generation.</li>
+					<li>Full-canvas redraw work happening during mouse hover updates.</li>
+				</ul>
+			
+				<h3>What Changed In This Optimized Version</h3>
+				<ul>
+					<li>Precomputed geometry cache (pixel offsets, hue, luminance) reused across saturation levels.</li>
+					<li>Single-pass wheel generation per saturation cache miss.</li>
+					<li>Normalized saturation cache keys to fixed integer buckets (<code>0..100</code>).</li>
+					<li>Direct pixel writes with a hot-path converter to reduce allocations.</li>
+					<li>Overlay canvas for hover/selection markers so mouse movement avoids wheel redraws.</li>
+				</ul>
+			
+				<h3>Expected Result</h3>
+				<ul>
+					<li>Faster first-time generation of each saturation level.</li>
+					<li>Smoother interaction when moving across the wheel.</li>
+					<li>Better scaling as the number of cached saturation states increases.</li>
+				</ul>
+			
+				<p>
+					Original project: <a href="https://github.com/gaberankin/color-picker" target="_blank" rel="noopener noreferrer">github.com/gaberankin/color-picker</a>
+				</p>
+			</section>
+		</div>
+	</body>
+</html>
